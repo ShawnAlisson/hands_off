@@ -1,0 +1,22 @@
+[
+  { "name": "London Dental Clinic", "problem": "No online booking", "city": "London", "sector": "Healthcare" },
+  { "name": "Manchester Plumber", "problem": "Poor website", "city": "Manchester", "sector": "Trades" },
+  { "name": "Bristol Gym", "problem": "Weak Google reviews", "city": "Bristol", "sector": "Fitness" },
+  { "name": "Edinburgh Bakery", "problem": "No delivery option", "city": "Edinburgh", "sector": "Food" },
+  { "name": "Leeds Law Firm", "problem": "Outdated client portal", "city": "Leeds", "sector": "Legal" },
+  { "name": "Cardiff Hair Salon", "problem": "No social media presence", "city": "Cardiff", "sector": "Beauty" },
+  { "name": "Glasgow Auto Repair", "problem": "No appointment scheduling", "city": "Glasgow", "sector": "Automotive" },
+  { "name": "Birmingham Tutoring", "problem": "Manual enrollment process", "city": "Birmingham", "sector": "Education" },
+  { "name": "Liverpool Pet Grooming", "problem": "No online payments", "city": "Liverpool", "sector": "Pets" },
+  { "name": "Newcastle Cafe", "problem": "No loyalty program", "city": "Newcastle", "sector": "Food" },
+  { "name": "Sheffield Roofing", "problem": "No quote calculator", "city": "Sheffield", "sector": "Trades" },
+  { "name": "Nottingham Yoga Studio", "problem": "No class booking", "city": "Nottingham", "sector": "Fitness" },
+  { "name": "Southampton Estate Agent", "problem": "Slow property listings", "city": "Southampton", "sector": "Real Estate" },
+  { "name": "Oxford Bookshop", "problem": "No e-commerce", "city": "Oxford", "sector": "Retail" },
+  { "name": "Cambridge Tech Startup", "problem": "No investor pitch deck", "city": "Cambridge", "sector": "Tech" },
+  { "name": "Brighton Surf School", "problem": "Seasonal booking chaos", "city": "Brighton", "sector": "Leisure" },
+  { "name": "Plymouth Fishing Charter", "problem": "No online reservations", "city": "Plymouth", "sector": "Tourism" },
+  { "name": "York Antique Dealer", "problem": "No inventory catalog", "city": "York", "sector": "Retail" },
+  { "name": "Bath Spa Hotel", "problem": "Low direct bookings", "city": "Bath", "sector": "Hospitality" },
+  { "name": "Aberdeen Oil Services", "problem": "Manual compliance tracking", "city": "Aberdeen", "sector": "Energy" }
+]
