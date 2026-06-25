@@ -30,10 +30,10 @@ export async function POST(
 
   const james = state.agents.find((a) => a.id === deal.salesLeadId);
   const agentName = james?.name ?? "James";
-  const reply = await replyAsSalesAgent(deal, message.trim(), agentName);
+  const { reply, manus } = await replyAsSalesAgent(deal, message.trim(), agentName);
 
   addChatMessage(state, dealId, message.trim(), reply);
   await setState(state);
 
-  return NextResponse.json({ reply, chatLog: deal.chatLog });
+  return NextResponse.json({ reply, chatLog: deal.chatLog, manus });
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { findDeal } from "@/lib/civilization";
+import { getPayPalClientId, isPayPalConfigured } from "@/lib/paypal";
 import { getState } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
@@ -23,5 +24,6 @@ export async function GET(
     salesAgent: james ? { name: james.name, title: james.title } : null,
     canAccept: deal.phase === "awaiting_owner",
     siteFixed: deal.siteFixed ?? false,
+    paypalEnabled: isPayPalConfigured() && !!getPayPalClientId(),
   });
 }

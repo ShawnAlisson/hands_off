@@ -17,7 +17,7 @@ export function siteVariantForProblem(problem: string): SiteVariant {
 }
 
 export function isSiteFixed(phase: string): boolean {
-  return phase === "building" || phase === "delivered" || phase === "paid";
+  return phase === "building" || phase === "delivered";
 }
 
 export function missingFeatureLabel(variant: SiteVariant): string {

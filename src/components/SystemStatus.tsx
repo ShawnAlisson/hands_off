@@ -8,6 +8,8 @@ export function SystemStatusBar({ status }: { status: SystemStatus | null }) {
   const items = [
     { label: "Manus", on: status.manus },
     { label: "Supabase", on: status.supabaseConnected ?? false },
+    { label: "Wassist", on: status.wassistConnected ?? false },
+    { label: "PayPal", on: status.paypalConnected ?? false },
   ];
 
   return (
@@ -16,6 +18,7 @@ export function SystemStatusBar({ status }: { status: SystemStatus | null }) {
         <span
           key={item.label}
           className={`text-[10px] font-medium ${item.on ? "text-[var(--success)]" : "text-[var(--muted)]"}`}
+          title={item.on ? `${item.label} connected` : `${item.label} not connected`}
         >
           {item.label} {item.on ? "●" : "○"}
         </span>

@@ -1,5 +1,7 @@
 import businesses from "@/data/uk-businesses.json";
-import { manusGenerateDeliverables, manusGeneratePitch } from "./manus";
+import { manusGenerateDeliverables, manusGenerateOutreach, manusGenerateSiteFix } from "./manus";
+import { sponsorMeta } from "./sponsors";
+import { sendWassistOutreach } from "./wassist";
 import type {
   Agent,
   CivilizationEvent,
@@ -130,6 +132,7 @@ function addEvent(
     title,
     body,
     ...opts,
+    meta: { ...sponsorMeta(type), ...opts?.meta },
   };
   state.events.unshift(event);
   if (state.events.length > 150) state.events.pop();
@@ -305,16 +308,33 @@ Fixed price: £${deal.value} · Live within 14 days · You can chat with me and 
 
 — James
 Sales Director, Hands Off`;
-      const manus = await manusGeneratePitch(
+      const base = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+      const offerUrl = `${base}${offerPath(deal.id)}`;
+      const previewUrl = `${base}${sitePath(deal.id)}`;
+
+      const manus = await manusGenerateOutreach(
         james.name,
-        { research: 2, sales: 4 },
-        `${deal.businessName}: ${deal.problem}`,
-        deal.value,
+        {
+          businessName: deal.businessName,
+          city: deal.city,
+          sector: deal.sector,
+          problem: deal.problem,
+          solution: deal.solution,
+          value: deal.value,
+        },
+        offerUrl,
         fallback
       );
-      deal.outreachMessage = manus.pitch;
-      const offerUrl = offerPath(deal.id);
-      const previewUrl = sitePath(deal.id);
+      deal.outreachMessage = manus.message;
+      deal.manusEnhanced = manus.enhanced;
+
+      const wassist = await sendWassistOutreach({
+        businessName: deal.businessName,
+        message: deal.outreachMessage,
+        offerUrl,
+      });
+      deal.wassistSent = wassist.sent;
+
       addEvent(
         state,
         "outreach_sent",
@@ -328,10 +348,13 @@ Sales Director, Hands Off`;
           agentTitle: james.title,
           agentIds: [james.id],
           meta: {
-            channel: "Email + offer link",
-            offer: offerUrl,
-            website: previewUrl,
+            channel: wassist.mode === "whatsapp" ? "WhatsApp (Wassist)" : "Wassist + offer link",
+            offer: offerPath(deal.id),
+            website: sitePath(deal.id),
+            preview: previewUrl,
             amount: `£${deal.value}`,
+            wassist: wassist.detail ?? "",
+            manus: manus.enhanced ? "AI pitch" : "template",
           },
         }
       );
@@ -341,6 +364,25 @@ Sales Director, Hands Off`;
       deal.siteFixed = true;
       const siteUrl = sitePath(deal.id);
       deal.liveUrl = siteUrl;
+
+      const siteFallback = {
+        heroTitle: `${deal.businessName}`,
+        heroSubtitle: `Professional ${deal.sector.toLowerCase()} services in ${deal.city}`,
+        ctaText: "Get started today",
+        featureTitle: deal.problem.includes("portal") ? "Client portal" : "Book online",
+        featureDescription: deal.solution,
+        featureButtonText: deal.problem.toLowerCase().includes("book") ? "Book now" : "Get started",
+        testimonial: `"The new system fixed our ${deal.problem.toLowerCase()} — customers love it." — Owner`,
+      };
+      const siteGen = await manusGenerateSiteFix(
+        deal.businessName,
+        deal.problem,
+        deal.solution,
+        deal.sector,
+        siteFallback
+      );
+      deal.siteContent = { ...siteGen.content, generatedByManus: siteGen.enhanced };
+
       const fallback = {
         strategy: deal.solution,
         landingPage: `Fixed site: ${siteUrl}`,
@@ -367,7 +409,11 @@ Sales Director, Hands Off`;
           agentName: sam.name,
           agentTitle: sam.title,
           agentIds: [sam.id],
-          meta: { url: siteUrl, preview: "Site updating…" },
+          meta: {
+            url: siteUrl,
+            preview: "AI-updated site live",
+            manus: deal.siteContent?.generatedByManus ? "yes" : "template",
+          },
         }
       );
       const project: Project = {
@@ -475,7 +521,7 @@ export function findDeal(state: CivilizationState, dealId: string): Deal | null 
 export function acceptOwnerOffer(
   state: CivilizationState,
   dealId: string,
-  lastOwnerMessage?: string
+  opts?: { lastOwnerMessage?: string; paypalCaptureId?: string; paypalOrderId?: string }
 ): { ok: boolean; error?: string } {
   const deal = findDeal(state, dealId);
   if (!deal) return { ok: false, error: "Deal not found" };
@@ -486,8 +532,15 @@ export function acceptOwnerOffer(
 
   deal.ownerAcceptedAt = now();
   deal.ownerResponse =
-    lastOwnerMessage ??
+    opts?.lastOwnerMessage ??
     `Accepted — let's fix ${deal.problem.toLowerCase()}. Happy to pay £${deal.value}.`;
+  if (opts?.paypalCaptureId) {
+    deal.paypalCaptureId = opts.paypalCaptureId;
+    deal.paymentRef = opts.paypalCaptureId;
+  }
+  if (opts?.paypalOrderId) deal.paypalOrderId = opts.paypalOrderId;
+  if (!deal.paymentRef) deal.paymentRef = `PAY-${uid("").slice(-8).toUpperCase()}`;
+
   deal.phase = "responded";
 
   addEvent(
@@ -503,7 +556,7 @@ export function acceptOwnerOffer(
     }
   );
 
-  deal.paymentRef = `PAY-${uid("").slice(-8).toUpperCase()}`;
+  deal.paymentRef = deal.paymentRef ?? `PAY-${uid("").slice(-8).toUpperCase()}`;
   deal.phase = "paid";
   state.companyBudget += deal.value;
   state.totalRevenue += deal.value;
@@ -513,7 +566,7 @@ export function acceptOwnerOffer(
     state,
     "payment_received",
     `Payment received — £${deal.value}`,
-    `Owner paid £${deal.value} via PayPal (ref ${deal.paymentRef}). Sam is building the fix now.`,
+    `Owner paid £${deal.value} via PayPal${opts?.paypalCaptureId ? " Sandbox" : ""} (ref ${deal.paymentRef}). Sam is building the fix now.`,
     {
       phase: "paid",
       dealId: deal.id,

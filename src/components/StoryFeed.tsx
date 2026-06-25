@@ -40,6 +40,17 @@ function EventCard({ event, isNew }: { event: CivilizationEvent; isNew: boolean 
         </span>
         {event.phase && <span>{phaseLabel(event.phase)}</span>}
       </div>
+      {event.meta?.sponsor && (
+        <div className="mt-2 inline-flex flex-wrap items-center gap-1.5 rounded-lg border border-indigo-100 bg-indigo-50 px-2.5 py-1 text-[10px] text-indigo-900">
+          <span className="font-semibold">{event.meta.sponsor}</span>
+          {event.meta.poweredBy && (
+            <>
+              <span className="text-indigo-400">·</span>
+              <span>{event.meta.poweredBy}</span>
+            </>
+          )}
+        </div>
+      )}
       <h3 className="mt-1.5 text-sm font-semibold">{event.title}</h3>
       {(event.agentName || event.businessName) && (
         <p className="mt-0.5 text-xs text-[var(--muted)]">
@@ -88,7 +99,7 @@ function EventCard({ event, isNew }: { event: CivilizationEvent; isNew: boolean 
       {event.meta && (
         <dl className="mt-3 flex flex-wrap gap-2">
           {Object.entries(event.meta)
-            .filter(([k]) => !["offer", "website"].includes(k))
+            .filter(([k]) => !["offer", "website", "sponsor", "poweredBy"].includes(k))
             .map(([k, v]) => (
               <div
                 key={k}

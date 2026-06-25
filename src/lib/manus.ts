@@ -144,6 +144,146 @@ export async function pollManusTask<T extends Record<string, unknown> = Record<s
   return null;
 }
 
+export async function manusChat(
+  systemPrompt: string,
+  userMessage: string,
+  history: { role: "owner" | "agent"; text: string }[]
+): Promise<{ reply: string; enhanced: boolean }> {
+  const fallback = "Thanks for your message — happy to answer any questions about the fix or timeline. When you're ready, use PayPal below to accept.";
+  if (!isManusEnabled()) return { reply: fallback, enhanced: false };
+
+  const transcript = history
+    .slice(-8)
+    .map((m) => `${m.role === "owner" ? "Business owner" : "James (sales)"}: ${m.text}`)
+    .join("\n");
+
+  const prompt = `${systemPrompt}
+
+Conversation:
+${transcript}
+Business owner: ${userMessage}
+
+Reply as James in 2-4 sentences. UK English. Be specific about the problem and solution.`;
+
+  try {
+    const taskId = await createManusTask(prompt);
+    if (!taskId) return { reply: fallback, enhanced: false };
+    const result = await pollManusTask(taskId, 22000);
+    const reply = result?.text?.trim();
+    if (reply && reply.length > 10) return { reply, enhanced: true };
+    return { reply: fallback, enhanced: false };
+  } catch {
+    return { reply: fallback, enhanced: false };
+  }
+}
+
+export interface SiteFixOutput extends Record<string, unknown> {
+  heroTitle: string;
+  heroSubtitle: string;
+  ctaText: string;
+  featureTitle: string;
+  featureDescription: string;
+  featureButtonText: string;
+  testimonial: string;
+}
+
+export async function manusGenerateSiteFix(
+  businessName: string,
+  problem: string,
+  solution: string,
+  sector: string,
+  fallback: SiteFixOutput
+): Promise<{ content: SiteFixOutput; enhanced: boolean }> {
+  if (!isManusEnabled()) return { content: fallback, enhanced: false };
+
+  const prompt = `You are Sam, a delivery engineer. Generate website copy for the FIXED version of ${businessName}'s site (${sector}).
+
+Problem that was fixed: ${problem}
+Solution deployed: ${solution}
+
+Write compelling, specific UK small-business website copy for the AFTER state (problem is now solved).`;
+
+  const schema = {
+    type: "object",
+    properties: {
+      heroTitle: { type: "string" },
+      heroSubtitle: { type: "string" },
+      ctaText: { type: "string" },
+      featureTitle: { type: "string" },
+      featureDescription: { type: "string" },
+      featureButtonText: { type: "string" },
+      testimonial: { type: "string" },
+    },
+    required: [
+      "heroTitle",
+      "heroSubtitle",
+      "ctaText",
+      "featureTitle",
+      "featureDescription",
+      "featureButtonText",
+      "testimonial",
+    ],
+  };
+
+  try {
+    const taskId = await createManusTask(prompt, schema);
+    if (!taskId) return { content: fallback, enhanced: false };
+    const result = await pollManusTask<SiteFixOutput>(taskId, 30000);
+    if (result?.structured?.heroTitle) {
+      return { content: result.structured, enhanced: true };
+    }
+    return { content: fallback, enhanced: false };
+  } catch {
+    return { content: fallback, enhanced: false };
+  }
+}
+
+export async function manusGenerateOutreach(
+  agentName: string,
+  deal: {
+    businessName: string;
+    city: string;
+    sector: string;
+    problem: string;
+    solution: string;
+    value: number;
+  },
+  offerUrl: string,
+  fallback: string
+): Promise<{ message: string; enhanced: boolean }> {
+  if (!isManusEnabled()) return { message: fallback, enhanced: false };
+
+  const prompt = `You are ${agentName}, Sales Director at Hands Off (UK AI company helping small businesses).
+
+Write a complete outreach message to the owner of ${deal.businessName} (${deal.sector}, ${deal.city}).
+
+Problem spotted: ${deal.problem}
+Proposed fix: ${deal.solution}
+Fixed price: £${deal.value} GBP
+Offer page: ${offerUrl}
+
+Format: friendly professional email (4-8 sentences). Mention they can chat and pay on the private offer page. Sign off as ${agentName}, Sales Director, Hands Off. UK English. No subject line.`;
+
+  const schema = {
+    type: "object",
+    properties: {
+      message: { type: "string", description: "Full outreach email body" },
+    },
+    required: ["message"],
+  };
+
+  try {
+    const taskId = await createManusTask(prompt, schema);
+    if (!taskId) return { message: fallback, enhanced: false };
+    const result = await pollManusTask<{ message?: string }>(taskId, 25000);
+    const message = result?.structured?.message ?? result?.text;
+    if (message && message.length > 80) return { message, enhanced: true };
+    return { message: fallback, enhanced: false };
+  } catch {
+    return { message: fallback, enhanced: false };
+  }
+}
+
 export async function manusGeneratePitch(
   agentName: string,
   skills: { research: number; sales: number },

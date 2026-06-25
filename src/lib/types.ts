@@ -56,6 +56,17 @@ export interface Opportunity {
   discoveredAt: string;
 }
 
+export interface SiteContent {
+  heroTitle: string;
+  heroSubtitle: string;
+  ctaText: string;
+  featureTitle: string;
+  featureDescription: string;
+  featureButtonText: string;
+  testimonial?: string;
+  generatedByManus?: boolean;
+}
+
 export interface Deal {
   id: string;
   opportunityId: string;
@@ -74,6 +85,11 @@ export interface Deal {
   siteFixed?: boolean;
   ownerAcceptedAt?: string;
   chatLog?: { role: "owner" | "agent"; text: string; at: string }[];
+  siteContent?: SiteContent;
+  paypalOrderId?: string;
+  paypalCaptureId?: string;
+  wassistSent?: boolean;
+  manusEnhanced?: boolean;
   buildSummary?: string;
   researchLeadId: string;
   salesLeadId: string;
@@ -151,6 +167,14 @@ export interface SystemStatus {
   supabaseConnected?: boolean;
   supabaseError?: string | null;
   supabaseRealtime: boolean;
+  wassist?: boolean;
+  wassistConnected?: boolean;
+  wassistAgents?: number;
+  wassistError?: string | null;
+  paypal?: boolean;
+  paypalConnected?: boolean;
+  paypalError?: string | null;
+  paypalMode?: string;
 }
 
 // Legacy — kept for storage migration

@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@paypal/react-paypal-js": "^10.1.0",
     "@supabase/supabase-js": "^2.49.8",
     "next": "^15.3.3",
     "react": "^19.1.0",

@@ -34,7 +34,7 @@ export default function SitePreviewPage({ params }: { params: Promise<{ dealId: 
     );
   }
 
-  const fixed = deal.siteFixed ?? ["building", "delivered", "paid"].includes(deal.phase);
+  const fixed = deal.siteFixed ?? ["building", "delivered"].includes(deal.phase);
 
   return (
     <div className="min-h-[100dvh] bg-gray-100 py-8 px-4">
