@@ -81,12 +81,35 @@ If PayPal env vars are missing, the offer page shows **“Accept offer (demo —
 
 ## Wassist (WhatsApp outreach)
 
-With `WASSIST_API_KEY` set:
+With `WASSIST_API_KEY` and `WASSIST_DEMO_PHONE` set:
 
-- **Demo mode:** API lists your agents; outreach still appears in the dashboard with offer link. Status bar shows **Wassist ●**.
-- **Live WhatsApp:** Set `WASSIST_AGENT_ID` (or leave blank to auto-pick first agent) and `WASSIST_DEMO_PHONE` (E.164, e.g. `+447...`). Outreach creates a Wassist conversation and prompts the agent.
+1. **Restart dev server** after changing `.env` (`npm run dev`)
+2. **Deploy your agent** at [wassist.app](https://wassist.app) — agent must be connected to WhatsApp
+3. **Test directly:**
+   ```bash
+   curl -X POST http://localhost:3000/api/wassist/test
+   ```
+   Or open `GET http://localhost:3000/api/wassist/test` to see agents + connection status.
 
-Check outreach event meta: `channel`, `wassist`, `manus`.
+### Why you might not receive a message
+
+WhatsApp Business API rules:
+
+| Situation | Fix |
+|-----------|-----|
+| **Cold outreach** (they never messaged you) | You need an **approved message template**. Set `WASSIST_TEMPLATE_NAME` in `.env` to your template name from WhatsApp Business Manager. |
+| **24-hour window** | Easiest demo fix: **message your Wassist WhatsApp number first** from `+447751947291`, then Reset → Start and wait for Outreach. Free-form messages work inside the 24h window. |
+| **Agent not deployed** | In wassist.app → Deploy agent to WhatsApp |
+| **Duplicate API key in .env** | Only one `WASSIST_API_KEY` line — the last one wins |
+
+The outreach event `wassist` meta chip now shows the **exact error** if sending failed (e.g. `401`, `template required`).
+
+### What the code does now
+
+1. Finds or creates a conversation (`POST /conversations/`)
+2. Sends your outreach via `POST /conversations/{id}/messages/` (direct text)
+3. Falls back to agent **trigger** (agent composes & sends)
+4. Falls back to **template** if `WASSIST_TEMPLATE_NAME` is set
 
 ---
 
